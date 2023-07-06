@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-hello-world
+  namespace: dev-saams-ns
+  labels:
+    app: dev-hello-world
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dev-hello-world
+  template:
+    metadata:
+      labels:
+        app: dev-hello-world
+    spec:
+      containers:
+      - name: dev-hello-world
+        image: 399029391937.dkr.ecr.ap-south-1.amazonaws.com/k1/saams/hello-world:dev
+        imagePullPolicy: "Always"
+        livenessProbe:
+          initialDelaySeconds: 5   # start probing after some time (enough time to boot)
+          periodSeconds: 30         # repeat the health check periodically
+          httpGet:
+            path: /hello-world-ginger/health # check the health of the server
+            port: 3000
+        resources:
+          requests: 
+            memory: "256Mi"   # memory request constraints on dev are restrictive.
+            cpu: "512m"
+          limits:
+            memory: "512Mi"   # overprovision on prod to prevent out of memory issues. (kubernetes restarts out of memory pods)
+            cpu: "1024m"
+        ports:
+        - containerPort: 3000
+        envFrom:
+          - secretRef:
+              name: dev-hello-world
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dev-hello-world-service
+  namespace: dev-saams-ns
+  labels:
+    app: dev-hello-world
+spec:
+  type: NodePort
+  selector:
+    app: dev-hello-world
+  ports:
+    - nodePort: 30058
+      port: 2013
+      targetPort: 3000
+
+
+---
+
+
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dev-hello-world
+  namespace: dev-saams-ns
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dev-hello-world
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+
