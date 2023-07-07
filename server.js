@@ -6,7 +6,7 @@ const app = express();
 // require('dotenv').config();
 
 
-const port = 3000;
+const port = 3001;
  
 // create application/json parser
 app.use(express.json());
@@ -33,7 +33,7 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-app.get('/hello-world-ginger', (req, res) => {
+app.get('/brian', (req, res) => {
   // let i = 0;
   // while (i < 1000) {
   //   logger.info('Info message');
@@ -47,11 +47,11 @@ app.get('/hello-world-ginger', (req, res) => {
   res.send("Hello World main new");
 });
 
-app.get('/hello-world-ginger/health', (req, res) => {
+app.get('/brian/health', (req, res) => {
   res.send("Hello1 World is Healthy 22355 " + process.env.spintly_secret);
 });
 
-app.post('/hello-world-ginger/sworks-service-for-test',  (req, res) => {
+app.post('/brian/sworks-service-for-test',  (req, res) => {
   let reqBody = JSON.parse(JSON.stringify(req.body));
   logger.info(reqBody);
   // logger.info(req.path);
